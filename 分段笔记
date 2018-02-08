@@ -1,1 +1,14 @@
 
+1. 用一个BinNode记录：分段开始索引，结束索引，区间长度，区间iv,区间woe,区间违约比率，区间坏账比率，最佳分段点（默认为空），
+最佳IV增加值（left_iv+right_iv-original_iv,默认为空）,左孩子（也是一个BinNode，默认为空），右孩子（也是一个BinNode，默认为空）
+2. CreateBin的参数：原来的df(第一列是feature,第二列是label),特征名称，feature_type(0，是连续型)，n:切成几段 n_base:最开始切成几段，
+min_len_pctg:区间最小比率 stop_criteria:迭代停止的比例
+该函数有3个重要的成员变量，self.IV、self.bins_output、self.info_table
+self.base_index create_base_index:list,如果一个区间，左点与前一个点相同且右点与后一个点相同等情况的合并；
+self.base_bin create_base_bin:创建一个dataFrame，clomns有left_index、right_index、bin_length、bad_count、good_count、len_cunsum、len_cumsum_rev
+3. 首先，算不分段的IV,用类BinNode保存且赋值给root_node;
+其次，exec_node(root_node),遍历所有点，找到最佳分段点，node.best_IV_gain=IV_gain（IV_left+IV_right-node.IV最大），node.best_split_idx,
+node.left_child,node.right_child都赋值，保存self.node_list=[root_node]
+进一步,self.split_bin(),循环n次，找到n个最优切段点，具体是通过self.split_node()分裂结点：循环self.node_list,比较node_list里的best_IV_gain哪个最大,
+就选择哪个区间进行分裂，并更新node_list,将原来的区间删除，self.IV减去原来的iv,exec_node找到左右孩子的最佳分段点，插入新的左右孩子的区间，
+并更新self.IV，然后保存在node_list_info里（start_idx_base,end_idx_base,best_split_idx,best_IV_gain,status）
